@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PC28智能预测系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(to right, #1a237e, #311b92);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.8;
+        }
+        
+        .controls {
+            padding: 20px;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        button {
+            background: linear-gradient(to right, #1a237e, #311b92);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .refresh-btn {
+            background: linear-gradient(to right, #00c853, #64dd17);
+        }
+        
+        .demo-btn {
+            background: linear-gradient(to right, #ff9800, #ff5722);
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #1a237e;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .data-section {
+            padding: 20px;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #1a237e;
+            border-bottom: 2px solid #1a237e;
+            padding-bottom: 8px;
+        }
+        
+        .latest-data {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .data-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid #1a237e;
+        }
+        
+        .calculation {
+            background: #e8eaf6;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+        }
+        
+        .step {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+        }
+        
+        .result {
+            background: #1a237e;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .betting-advice {
+            font-size: 22px;
+            font-weight: bold;
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .bet-option {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 50px;
+            font-weight: bold;
+        }
+        
+        .recommend {
+            background: linear-gradient(to right, #00c853, #64dd17);
+            color: white;
+        }
+        
+        .avoid {
+            background: linear-gradient(to right, #d50000, #ff5131);
+            color: white;
+        }
+        
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .history-table th {
+            background: #1a237e;
+            color: white;
+            padding: 12px 15px;
+            text-align: left;
+        }
+        
+        .history-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .history-table tr:nth-child(even) {
+            background: #f5f5f5;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            background: #f5f5f5;
+            color: #666;
+        }
+        
+        .demo-data {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .api-status {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .api-error {
+            background: #ffebee;
+            border: 1px solid #f44336;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .algorithm-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .algorithm-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid #4caf50;
+        }
+        
+        .confidence-bar {
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(to right, #4caf50, #8bc34a);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+        
+        .special-codes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+            justify-content: center;
+        }
+        
+        .special-code {
+            background: #ff9800;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        
+        .comprehensive-result {
+            background: linear-gradient(to right, #1a237e, #311b92);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>PC28智能预测系统</h1>
+            <div class="subtitle">基于期号与和值算法的多维度智能分析系统</div>
+        </header>
+        
+        <div class="controls">
+            <div>
+                <button id="fetchData">获取最新数据</button>
+                <button id="refreshData" class="refresh-btn">刷新数据</button>
+                <button id="useDemoData" class="demo-btn">使用演示数据</button>
+            </div>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            正在获取最新开奖数据...
+        </div>
+        
+        <div class="data-section">
+            <div class="api-status" id="apiStatus" style="display: none;">
+                <strong>API状态：</strong><span id="apiStatusText">正在检查...</span>
+            </div>
+            
+            <div class="demo-data" id="demoDataNotice">
+                <strong>演示模式：</strong>当前使用演示数据，点击"获取最新数据"尝试连接真实API
+            </div>
+            
+            <div class="section-title">最新开奖数据</div>
+            <div class="latest-data" id="latestData"></div>
+            
+            <div class="calculation">
+                <div class="section-title">策略计算过程</div>
+                <div class="calculation-steps" id="calculationSteps">
+                    <p>数据加载后将显示详细计算过程</p>
+                </div>
+            </div>
+            
+            <div class="section-title">多算法预测结果</div>
+            <div class="algorithm-results" id="algorithmResults"></div>
+            
+            <div class="comprehensive-result" id="comprehensiveResult">
+                <h2>综合预测结果</h2>
+                <div id="comprehensiveContent">
+                    <p>等待数据计算...</p>
+                </div>
+            </div>
+            
+            <div class="result" id="result">
+                <h2>基础策略分析结果</h2>
+                <div id="resultContent">
+                    <p>等待数据计算...</p>
+                </div>
+            </div>
+            
+            <div class="section-title">历史开奖记录</div>
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>期号</th>
+                        <th>开奖时间</th>
+                        <th>开奖号码</th>
+                        <th>和值</th>
+                        <th>类型</th>
+                    </tr>
+                </thead>
+                <tbody id="historyTableBody">
+                    <tr>
+                        <td colspan="5" style="text-align: center;">暂无数据</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <footer>
+            <p>PC28智能预测系统 &copy; 2025 - 本工具仅供数据分析参考</p>
+        </footer>
+    </div>
+
+    <script>
+        // 演示数据
+        const demoData = [
+            { "qihao": "3354518", "opentime": "11-01 20:25:46", "opennum": "9+4+4", "sum": "17" },
+            { "qihao": "3354517", "opentime": "11-01 20:22:00", "opennum": "3+5+2", "sum": "10" },
+            { "qihao": "3354516", "opentime": "11-01 20:18:30", "opennum": "3+4+1", "sum": "8" },
+            { "qihao": "3354515", "opentime": "11-01 20:15:00", "opennum": "4+4+6", "sum": "14" },
+            { "qihao": "3354514", "opentime": "11-01 20:11:30", "opennum": "3+4+6", "sum": "13" },
+            { "qihao": "3354513", "opentime": "11-01 20:08:00", "opennum": "2+5+6", "sum": "13" },
+            { "qihao": "3354512", "opentime": "11-01 20:04:30", "opennum": "1+3+5", "sum": "9" },
+            { "qihao": "3354511", "opentime": "11-01 20:01:00", "opennum": "4+2+1", "sum": "7" },
+            { "qihao": "3354510", "opentime": "11-01 19:57:30", "opennum": "6+3+2", "sum": "11" },
+            { "qihao": "3354509", "opentime": "11-01 19:54:00", "opennum": "5+4+3", "sum": "12" }
+        ];
+
+        // 特殊号码映射
+        const specialCodes = {
+            "小双": ["00", "02", "04", "06", "08", "10", "12"],
+            "小单": ["01", "03", "05", "07", "09", "11", "13"],
+            "大双": ["14", "16", "18", "20", "22", "24", "26"],
+            "大单": ["15", "17", "19", "21", "23", "25", "27"]
+        };
+
+        // 解析开奖号码
+        function parseOpennum(opennum) {
+            const numbers = opennum.replace(/\s/g, '').split('+');
+            return {
+                first: parseInt(numbers[0]) || 0,
+                second: parseInt(numbers[1]) || 0,
+                third: parseInt(numbers[2]) || 0
+            };
+        }
+
+        // 获取数字的个位数和十位数
+        function getTensAndOnes(number) {
+            return {
+                tens: Math.floor((number % 100) / 10),
+                ones: number % 10
+            };
+        }
+
+        // 根据和值获取类型
+        function getTypeBySum(sum) {
+            if (sum <= 13) {
+                return sum % 2 === 0 ? "小双" : "小单";
+            } else {
+                return sum % 2 === 0 ? "大双" : "大单";
+            }
+        }
+
+        // 根据数字获取类型
+        function getTypeByNumber(number) {
+            number = Math.abs(number) % 28;
+            if (number <= 13) {
+                return number % 2 === 0 ? "小双" : "小单";
+            } else {
+                return number % 2 === 0 ? "大双" : "大单";
+            }
+        }
+
+        // 获取互补类型
+        function getComplementaryType(baseType) {
+            const complementaryMap = {
+                "大单": "小双", "大双": "小单",
+                "小单": "大双", "小双": "大单"
+            };
+            return complementaryMap[baseType] || "大双";
+        }
+
+        // 期号和值算法1: 基础排除算法
+        function periodSumAlgorithm1(data) {
+            if (data.length < 3) return { result: "大单大双", confidence: 50 };
+            
+            // 获取期号后两位和和值
+            const periodSuffix = data[0].period.length >= 2 ? 
+                parseInt(data[0].period.slice(-2)) : parseInt(data[0].period);
+            const currentSum = data[0].sum;
+            
+            // 计算排除类型
+            const A = data[1].sum % 10;
+            const B = data[1].numbers[1];
+            const C = data[2].sum % 10;
+            
+            let S = (A + B + C + 8) * 2;
+            if (S > 27) S = S - 27;
+            
+            const excludeType = getTypeByNumber(S);
+            
+            // 构建候选类型
+            const allTypes = ["大单", "大双", "小单", "小双"];
+            const candidateTypes = allTypes.filter(type => type !== excludeType);
+            
+            // 基于期号和和值选择类型
+            const calcValue = (periodSuffix + currentSum) % 4;
+            let result;
+            
+            if (calcValue === 0) {
+                result = candidateTypes[0] + candidateTypes[1];
+            } else if (calcValue === 1) {
+                result = candidateTypes[1] + (candidateTypes[2] || candidateTypes[0]);
+            } else if (calcValue === 2) {
+                result = (candidateTypes[2] || candidateTypes[0]) + candidateTypes[0];
+            } else {
+                result = candidateTypes[0] + (candidateTypes[2] || candidateTypes[1]);
+            }
+            
+            return { 
+                result: result, 
+                confidence: 75,
+                description: "基础排除算法: 基于期号、和值和排除法计算"
+            };
+        }
+
+        // 期号和值算法2: 期尾和值综合算法
+        function periodSumAlgorithm2(data) {
+            if (data.length < 2) return { result: "大单大双", confidence: 50 };
+            
+            // 获取期号后两位和最新和值
+            const periodSuffix = data[0].period.length >= 2 ? 
+                parseInt(data[0].period.slice(-2)) : parseInt(data[0].period);
+            const currentSum = data[0].sum;
+            const prevSum = data[1].sum;
+            
+            // 计算预测值
+            const calc1 = (periodSuffix * currentSum) % 28;
+            const calc2 = (periodSuffix + currentSum + prevSum) % 28;
+            
+            const type1 = getTypeByNumber(calc1);
+            const type2 = getTypeByNumber(calc2);
+            
+            // 如果两个类型相同，选择互补类型
+            let result;
+            if (type1 === type2) {
+                const complementary = getComplementaryType(type1);
+                result = type1 + complementary;
+            } else {
+                result = type1 + type2;
+            }
+            
+            return { 
+                result: result, 
+                confidence: 70,
+                description: "期尾和值综合算法: 基于期号尾数和多期和值计算"
+            };
+        }
+
+        // 期号和值算法3: 期号变换算法
+        function periodSumAlgorithm3(data) {
+            if (data.length < 3) return { result: "大单大双", confidence: 50 };
+            
+            // 获取期号后两位
+            const periodSuffix = data[0].period.length >= 2 ? 
+                parseInt(data[0].period.slice(-2)) : parseInt(data[0].period);
+            
+            // 获取最近三期和值
+            const sum1 = data[0].sum;
+            const sum2 = data[1].sum;
+            const sum3 = data[2].sum;
+            
+            // 计算预测值
+            const calc1 = (periodSuffix * sum1 + sum2) % 28;
+            const calc2 = (periodSuffix + sum1 + sum2 + sum3) % 28;
+            
+            const type1 = getTypeByNumber(calc1);
+            const type2 = getTypeByNumber(calc2);
+            
+            return { 
+                result: type1 + type2, 
+                confidence: 65,
+                description: "期号变换算法: 基于期号变换和多期和值计算"
+            };
+        }
+
+        // 期号和值算法4: 和值趋势算法
+        function periodSumAlgorithm4(data) {
+            if (data.length < 5) return { result: "大单大双", confidence: 50 };
+            
+            // 获取期号后两位
+            const periodSuffix = data[0].period.length >= 2 ? 
+                parseInt(data[0].period.slice(-2)) : parseInt(data[0].period);
+            
+            // 分析和值趋势
+            const recentSums = data.slice(0, 5).map(item => item.sum);
+            let sumTrend = 0;
+            for (let i = 0; i < recentSums.length - 1; i++) {
+                sumTrend += recentSums[i] - recentSums[i + 1];
+            }
+            
+            // 计算预测值
+            let calc1, calc2;
+            if (sumTrend > 0) {  // 和值上升趋势
+                calc1 = (periodSuffix + recentSums[0] + 5) % 28;
+                calc2 = (periodSuffix * 2 + recentSums[0]) % 28;
+            } else {  // 和值下降趋势
+                calc1 = (periodSuffix + recentSums[0] - 5) % 28;
+                calc2 = (periodSuffix * 3 - recentSums[0]) % 28;
+            }
+            
+            const type1 = getTypeByNumber(calc1);
+            const type2 = getTypeByNumber(calc2);
+            
+            return { 
+                result: type1 + type2, 
+                confidence: 70,
+                description: "和值趋势算法: 基于和值趋势和期号计算"
+            };
+        }
+
+        // 期号和值算法5: 期尾倍数算法
+        function periodSumAlgorithm5(data) {
+            if (data.length < 2) return { result: "大单大双", confidence: 50 };
+            
+            // 获取期号后两位
+            const periodSuffix = data[0].period.length >= 2 ? 
+                parseInt(data[0].period.slice(-2)) : parseInt(data[0].period);
+            const currentSum = data[0].sum;
+            
+            // 计算期尾倍数
+            let periodMultiple = periodSuffix % 10;
+            if (periodMultiple === 0) periodMultiple = 1;
+            
+            // 计算预测值
+            const calc1 = (periodSuffix * periodMultiple + currentSum) % 28;
+            const calc2 = (periodSuffix + currentSum * periodMultiple) % 28;
+            
+            const type1 = getTypeByNumber(calc1);
+            const type2 = getTypeByNumber(calc2);
+            
+            // 如果两个类型相同，选择互补类型
+            let result;
+            if (type1 === type2) {
+                const complementary = getComplementaryType(type1);
+                result = type1 + complementary;
+            } else {
+                result = type1 + type2;
+            }
+            
+            return { 
+                result: result, 
+                confidence: 65,
+                description: "期尾倍数算法: 基于期号尾数倍数和和值计算"
+            };
+        }
+
+        // 推荐特码
+        function recommendCodes(doubleGroup, data) {
+            if (doubleGroup.length !== 4) return [];
+            
+            const type1 = doubleGroup.substring(0, 2);
+            const type2 = doubleGroup.substring(2, 4);
+            const codes1 = specialCodes[type1] || [];
+            const codes2 = specialCodes[type2] || [];
+            
+            // 合并特码
+            const allCodes = [...new Set([...codes1, ...codes2])];
+            
+            if (allCodes.length === 0) return [];
+            
+            // 基于期号和和值优化选择
+            const periodSuffix = data[0].period.length >= 2 ? 
+                parseInt(data[0].period.slice(-2)) : parseInt(data[0].period);
+            const currentSum = data[0].sum;
+            
+            // 计算权重
+            const weightedCodes = [];
+            for (const code of allCodes) {
+                const codeNum = parseInt(code);
+                
+                // 基于期号和和值计算权重
+                const periodWeight = 1.0 / (1 + Math.abs(codeNum - periodSuffix));
+                const sumWeight = 1.0 / (1 + Math.abs(codeNum - currentSum));
+                
+                const totalWeight = periodWeight * 0.6 + sumWeight * 0.4;
+                weightedCodes.push({ code, weight: totalWeight });
+            }
+            
+            // 按权重排序
+            weightedCodes.sort((a, b) => b.weight - a.weight);
+            
+            // 返回前4个
+            return weightedCodes.slice(0, 4).map(item => item.code);
+        }
+
+        // 计算置信度
+        function calculateConfidence(resultCounts, algorithmCount, data) {
+            if (data.length < 10) return 50;
+            
+            // 基础置信度
+            let confidence = 70;
+            
+            // 基于算法一致性增加置信度
+            const mostCommonCount = Math.max(...Object.values(resultCounts));
+            if (mostCommonCount >= 4) {
+                confidence += 25;
+            } else if (mostCommonCount >= 3) {
+                confidence += 15;
+            } else if (mostCommonCount >= 2) {
+                confidence += 10;
+            }
+            
+            // 基于数据质量增加置信度
+            if (data.length >= 40) {
+                confidence += 10;
+            } else if (data.length >= 25) {
+                confidence += 5;
+            }
+            
+            return Math.min(95, confidence);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const fetchDataBtn = document.getElementById('fetchData');
+            const refreshDataBtn = document.getElementById('refreshData');
+            const useDemoDataBtn = document.getElementById('useDemoData');
+            const loadingElement = document.getElementById('loading');
+            const latestDataElement = document.getElementById('latestData');
+            const calculationStepsElement = document.getElementById('calculationSteps');
+            const resultElement = document.getElementById('resultContent');
+            const historyTableBody = document.getElementById('historyTableBody');
+            const demoDataNotice = document.getElementById('demoDataNotice');
+            const apiStatus = document.getElementById('apiStatus');
+            const apiStatusText = document.getElementById('apiStatusText');
+            const algorithmResultsElement = document.getElementById('algorithmResults');
+            const comprehensiveResultElement = document.getElementById('comprehensiveContent');
+
+            // 初始加载演示数据
+            loadDemoData();
+
+            // 按钮事件
+            fetchDataBtn.addEventListener('click', fetchRealData);
+            refreshDataBtn.addEventListener('click', fetchRealData);
+            useDemoDataBtn.addEventListener('click', loadDemoData);
+
+            function loadDemoData() {
+                processData(demoData);
+                demoDataNotice.style.display = 'block';
+                apiStatus.style.display = 'block';
+                apiStatusText.innerHTML = '使用演示数据模式';
+                apiStatus.className = 'api-status';
+            }
+
+            async function fetchRealData() {
+                loadingElement.style.display = 'block';
+                demoDataNotice.style.display = 'none';
+                apiStatus.style.display = 'block';
+                apiStatusText.innerHTML = '正在连接API...';
+                
+                try {
+                    const response = await fetch('https://pc28.help/kj.json?limit=50&no_cache=false');
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP错误! 状态: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // 处理数据格式
+                    let processedData = data;
+                    if (!Array.isArray(data)) {
+                        if (data.data && Array.isArray(data.data)) {
+                            processedData = data.data;
+                        } else {
+                            throw new Error('API返回的数据格式不正确');
+                        }
+                    }
+                    
+                    processData(processedData);
+                    apiStatusText.innerHTML = `API连接成功 - 获取到 ${processedData.length} 期数据`;
+                    apiStatus.className = 'api-status';
+                    
+                } catch (error) {
+                    apiStatusText.innerHTML = `API连接失败: ${error.message}`;
+                    apiStatus.className = 'api-error';
+                    loadDemoData();
+                } finally {
+                    loadingElement.style.display = 'none';
+                }
+            }
+
+            function processData(data) {
+                if (!Array.isArray(data) || data.length < 3) {
+                    latestDataElement.innerHTML = '<div class="data-card"><h3>数据不足</h3><p>无法进行计算</p></div>';
+                    return;
+                }
+
+                // 格式化数据
+                const formattedData = data.map(item => {
+                    const parsed = parseOpennum(item.opennum);
+                    return {
+                        period: item.qihao,
+                        numbers: [parsed.first, parsed.second, parsed.third],
+                        sum: parseInt(item.sum),
+                        type: getTypeBySum(parseInt(item.sum)),
+                        time: item.opentime
+                    };
+                });
+
+                displayLatestData(formattedData.slice(0, 5));
+                displayHistoryData(formattedData);
+                calculateBasicStrategy(formattedData);
+                runAdvancedAlgorithms(formattedData);
+            }
+
+            function displayLatestData(latestData) {
+                let html = '';
+                latestData.forEach((item, index) => {
+                    html += `
+                        <div class="data-card">
+                            <h3>第${index + 1}期 - 期号: ${item.period}</h3>
+                            <p><strong>开奖号码:</strong> ${item.numbers.join('+')}</p>
+                            <p><strong>和值:</strong> ${item.sum} ${item.type}</p>
+                            <p><strong>开奖时间:</strong> ${item.time}</p>
+                        </div>
+                    `;
+                });
+                latestDataElement.innerHTML = html;
+            }
+
+            function displayHistoryData(data) {
+                let html = '';
+                data.forEach(item => {
+                    html += `<tr>
+                        <td>${item.period}</td>
+                        <td>${item.time}</td>
+                        <td>${item.numbers.join('+')}</td>
+                        <td>${item.sum}</td>
+                        <td>${item.type}</td>
+                    </tr>`;
+                });
+                historyTableBody.innerHTML = html;
+            }
+
+            function calculateBasicStrategy(data) {
+                const latestThree = data.slice(0, 3);
+                const firstPositions = [], secondPositions = [], thirdPositions = [], sums = [];
+                
+                let stepsHtml = '<div class="step"><strong>步骤1: 提取最新3期数据并拆分号码</strong></div>';
+                
+                latestThree.forEach((item, index) => {
+                    firstPositions.push(item.numbers[0]);
+                    secondPositions.push(item.numbers[1]);
+                    thirdPositions.push(item.numbers[2]);
+                    sums.push(item.sum);
+                    
+                    stepsHtml += `<div class="step">
+                        第${index + 1}期: 号码${item.numbers.join('+')} → 第一位=${item.numbers[0]}, 第二位=${item.numbers[1]}, 第三位=${item.numbers[2]}, 和值=${item.sum}
+                    </div>`;
+                });
+                
+                const S1 = firstPositions.reduce((a, b) => a + b, 0);
+                const S2 = secondPositions.reduce((a, b) => a + b, 0);
+                const S3 = thirdPositions.reduce((a, b) => a + b, 0);
+                const T1 = sums[0];
+                const R = T1 !== 0 ? Math.floor((S1 * S2 * S3) / T1) : 0;
+                const { tens, ones } = getTensAndOnes(R);
+                const tensType = tens % 2 === 0 ? '双' : '单';
+                const onesType = ones % 2 === 0 ? '双' : '单';
+                
+                stepsHtml += `
+                    <div class="step"><strong>步骤2: 计算各项和值</strong></div>
+                    <div class="step">第一位号码: [${firstPositions.join(', ')}] → 和值 S1 = ${S1}</div>
+                    <div class="step">第二位号码: [${secondPositions.join(', ')}] → 和值 S2 = ${S2}</div>
+                    <div class="step">第三位号码: [${thirdPositions.join(', ')}] → 和值 S3 = ${S3}</div>
+                    <div class="step">最新一期和值 T1 = ${T1}</div>
+                    <div class="step"><strong>步骤3: 计算策略公式</strong></div>
+                    <div class="step">R = (S1 × S2 × S3) ÷ T1 = (${S1} × ${S2} × ${S3}) ÷ ${T1} = ${R}</div>
+                    <div class="step"><strong>步骤4: 分析R的个位数和十位数</strong></div>
+                    <div class="step">R = ${R} → 十位数: ${tens}(${tensType}), 个位数: ${ones}(${onesType})</div>
+                `;
+                
+                calculationStepsElement.innerHTML = stepsHtml;
+                
+                let resultHtml = '';
+                if (tensType === '双' && onesType === '双') {
+                    resultHtml = `
+                        <div style="font-size: 20px; margin-bottom: 15px;">🔴 出现两个双 → 杀双</div>
+                        <div class="betting-advice">投注建议</div>
+                        <div>
+                            <span class="bet-option recommend">大单</span>
+                            <span class="bet-option recommend">小单</span>
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <span class="bet-option avoid">大双</span>
+                            <span class="bet-option avoid">小双</span>
+                        </div>
+                    `;
+                } else if (tensType === '单' && onesTy=== '单') {
+                    resultHtml = `
+                        <div style="font-size: 20px; margin-bottom: 15px;">🔴 出现两个单 → 杀单</div>
+                        <div class="betting-advice">投注建议</div>
+                        <div>
+                            <span class="bet-option recommend">大双</span>
+                            <span class="bet-option recommend">小双</span>
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <span class="bet-option avoid">大单</span>
+                            <span class="bet-option avoid">小单</span>
+                        </div>
+                    `;
+                } else {
+                    resultHtml = `
+                        <div style="font-size: 20px; margin-bottom: 15px;">⚠️ 一单一双，无明确方向</div>
+                        <div class="betting-advice">建议观望</div>
+                    `;
+                }
+                
+                const latest = data[0];
+                resultHtml += `
+                    <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.3);">
+                        <p>最新一期: 期号${latest.period} 开奖${latest.numbers.join('+')} 和值${latest.sum} ${latest.type}</p>
+                    </div>
+                `;
+                
+                resultElement.innerHTML = resultHtml;
+            }
+
+            function runAdvancedAlgorithms(data) {
+                // 运行所有算法
+                const algorithms = [
+                    periodSumAlgorithm1,
+                    periodSumAlgorithm2,
+                    periodSumAlgorithm3,
+                    periodSumAlgorithm4,
+                    periodSumAlgorithm5
+                ];
+                
+                const results = [];
+                let algorithmHtml = '';
+                
+                algorithms.forEach((algorithm, index) => {
+                    const result = algorithm(data);
+                    results.push(result);
+                    
+                    // 推荐特码
+                    const specialCodes = recommendCodes(result.result, data);
+                    
+                    algorithmHtml += `
+                        <div class="algorithm-card">
+                            <h3>算法 ${index + 1}</h3>
+                            <p>${result.description}</p>
+                            <p><strong>预测结果:</strong> ${result.result}</p>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" style="width: ${result.confidence}%"></div>
+                            </div>
+                            <p><strong>置信度:</strong> ${result.confidence}%</p>
+                            ${specialCodes.length > 0 ? `
+                                <p><strong>推荐特码:</strong></p>
+                                <div class="special-codes">
+                                    ${specialCodes.map(code => `<span class="special-code">${code}</span>`).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+                
+                algorithmResultsElement.innerHTML = algorithmHtml;
+                
+                // 计算综合结果
+                calculateComprehensiveResult(results, data);
+            }
+
+            function calculateComprehensiveResult(results, data) {
+                // 统计结果频率
+                const resultCounts = {};
+                results.forEach(result => {
+                    resultCounts[result.result] = (resultCounts[result.result] || 0) + 1;
+                });
+                
+                // 找到出现次数最多的结果
+                let mostCommonResult = "";
+                let maxCount = 0;
+                
+                for (const [result, count] of Object.entries(resultCounts)) {
+                    if (count > maxCount) {
+                        maxCount = count;
+                        mostCommonResult = result;
+                    }
+                }
+                
+                // 计算综合置信度
+                const confidence = calculateConfidence(resultCounts, results.length, data);
+                
+                // 推荐特码
+                const specialCodes = recommendCodes(mostCommonResult, data);
+                
+                // 显示综合结果
+                let comprehensiveHtml = `
+                    <div style="font-size: 24px; margin-bottom: 15px;">${mostCommonResult}</div>
+                    <div class="confidence-bar" style="width: 80%; margin: 0 auto;">
+                        <div class="confidence-fill" style="width: ${confidence}%"></div>
+                    </div>
+                    <p><strong>综合置信度:</strong> ${confidence}%</p>
+                    <div style="margin: 20px 0;">
+                        <span class="bet-option recommend">${mostCommonResult.substring(0, 2)}</span>
+                        <span class="bet-option recommend">${mostCommonResult.substring(2, 4)}</span>
+                    </div>
+                `;
+                
+                if (specialCodes.length > 0) {
+                    comprehensiveHtml += `
+                        <div class="betting-advice">推荐特码</div>
+                        <div class="special-codes">
+                            ${specialCodes.map(code => `<span class="special-code">${code}</span>`).join('')}
+                        </div>
+                    `;
+                }
+                
+                comprehensiveResultElement.innerHTML = comprehensiveHtml;
+            }
+        });
+    </script>
+</body>
+</html>
