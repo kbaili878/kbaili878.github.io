@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PC28预测</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background: #0d1117; 
+            color: #fff; 
+            font-family: Arial;
+            padding: 15px;
+        }
+        .container { max-width: 500px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .header h1 { color: #238636; margin-bottom: 5px; }
+        .status {
+            background: #161b22;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+        }
+        button { 
+            background: #238636; 
+            color: #fff; 
+            border: none; 
+            padding: 12px; 
+            width: 100%; 
+            margin: 10px 0; 
+            cursor: pointer; 
+            border-radius: 5px;
+        }
+        .result { 
+            background: #161b22; 
+            padding: 15px; 
+            margin: 15px 0; 
+            border-radius: 5px; 
+        }
+        .prediction-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .prediction-item {
+            background: #0d1117;
+            padding: 12px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .codes { 
+            display: flex; 
+            gap: 8px; 
+            margin: 10px 0;
+            justify-content: center;
+        }
+        .code { 
+            width: 35px; 
+            height: 35px; 
+            background: #238636;
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            font-size: 14px;
+        }
+        .copy { 
+            background: #0d1117; 
+            padding: 10px; 
+            text-align: center; 
+            margin: 15px 0; 
+            cursor: pointer; 
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .history {
+            background: #161b22;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .history-title {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #8b949e;
+        }
+        .history-table {
+            width: 100%;
+            font-size: 12px;
+            border-collapse: collapse;
+        }
+        .history-table th {
+            background: #0d1117;
+            padding: 8px;
+            text-align: left;
+            color: #8b949e;
+        }
+        .history-table td {
+            padding: 8px;
+            border-bottom: 1px solid #30363d;
+        }
+        .history-table tr:last-child td {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>河南人预测</h1>
+            <p style="color: #8b949e; font-size: 14px;">作者空白</p>
+        </div>
+        
+        <div class="status">
+            <span id="statusText">连接中...</span>
+            <span id="lastUpdate">--:--</span>
+        </div>
+        
+        <button onclick="getData()">获取数据并预测</button>
+        
+        <div id="result"></div>
+        <div id="history"></div>
+    </div>
+
+    <script>
+        async function getData() {
+            try {
+                const response = await fetch('https://pc28.help/kj.json');
+                const data = await response.json();
+                
+                if(data.data && data.data.length > 0) {
+                    updateStatus(true);
+                    predict(data.data);
+                    showHistory(data.data);
+                } else {
+                    throw new Error('数据为空');
+                }
+            } catch (error) {
+                updateStatus(false);
+                const mockData = generateMockData();
+                predict(mockData);
+                showHistory(mockData);
+            }
+        }
+
+        function updateStatus(online) {
+            const statusText = document.getElementById('statusText');
+            if(online) {
+                statusText.textContent = '已连接';
+                document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString().slice(0,5);
+            } else {
+                statusText.textContent = '连接失败';
+                document.getElementById('lastUpdate').textContent = '--:--';
+            }
+        }
+
+        function generateMockData() {
+            const mockData = [];
+            const now = new Date();
+            
+            for(let i = 0; i < 30; i++) {
+                const time = new Date(now - i * 5 * 60 * 1000);
+                const num1 = Math.floor(Math.random() * 10);
+                const num2 = Math.floor(Math.random() * 10);
+                const num3 = Math.floor(Math.random() * 10);
+                const sum = num1 + num2 + num3;
+                
+                mockData.push({
+                    qihao: `33609${(40-i).toString().padStart(2, '0')}`,
+                    opennum: `${num1}+${num2}+${num3}=${sum}`,
+                    opentime: time.toLocaleString('zh-CN', { 
+                        month: '2-digit', 
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                    }).replace(/\//g, '-')
+                });
+            }
+            return mockData;
+        }
+
+        function predict(data) {
+            const parsed = data.map(item => {
+                const nums = item.opennum.split('+').map(Number);
+                const sum = nums[0] + nums[1] + nums[2];
+                const type = sum <= 13 ? (sum % 2 === 0 ? "小双" : "小单") : (sum % 2 === 0 ? "大双" : "大单");
+                return {sum, type};
+            });
+
+            const types = ["大单", "大双", "小单", "小双"];
+            const counts = { "大单": 0, "大双": 0, "小单": 0, "小双": 0 };
+            
+            parsed.slice(0, 15).forEach(item => counts[item.type]++);
+            
+            const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+            const finalResult = sorted[0][0] + sorted[1][0];
+            const killResult = types.find(t => !finalResult.includes(t)) || "大双";
+
+            const codeMap = {
+                "大单": [15, 17, 19, 21, 23, 25, 27],
+                "大双": [14, 16, 18, 20, 22, 24, 26],
+                "小单": [1, 3, 5, 7, 9, 11, 13],
+                "小双": [0, 2, 4, 6, 8, 10, 12]
+            };
+            
+            const predTypes = [finalResult.substring(0, 2), finalResult.substring(2, 4)];
+            let codes = [];
+            predTypes.forEach(type => {
+                codes.push(...codeMap[type].slice(0, 2));
+            });
+
+            const nextPeriod = (parseInt(data[0].qihao) + 1).toString().slice(-2);
+            const output = `${nextPeriod}杀${killResult} ${finalResult} ${codes.slice(0, 4).join(' ')}`;
+            
+            document.getElementById('result').innerHTML = `
+                <div class="result">
+                    <div class="prediction-grid">
+                        <div class="prediction-item">
+                            <div style="color: #8b949e; font-size: 12px;">双组预测</div>
+                            <div style="font-weight: bold;">${finalResult}</div>
+                        </div>
+                        <div class="prediction-item">
+                            <div style="color: #8b949e; font-size: 12px;">杀组推荐</div>
+                            <div style="font-weight: bold;">${killResult}</div>
+                        </div>
+                        <div class="prediction-item">
+                            <div style="color: #8b949e; font-size: 12px;">特码推荐</div>
+                            <div class="codes">
+                                ${codes.slice(0, 4).map(code => `<div class="code">${code}</div>`).join('')}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="copy" onclick="copyText('${output}')">${output}</div>
+                </div>
+            `;
+        }
+
+        function showHistory(data) {
+            const historyRows = data.slice(0, 20).map(item => {
+                const nums = item.opennum.split('+');
+                const sum = parseInt(nums[0]) + parseInt(nums[1]) + parseInt(nums[2]);
+                const time = item.opentime.split(' ')[1].slice(0,5);
+                
+                return `
+                    <tr>
+                        <td>${item.qihao}</td>
+                        <td>${time}</td>
+                        <td>${nums[0]}+${nums[1]}+${nums[2]}</td>
+                        <td>${sum}</td>
+                    </tr>
+                `;
+            }).join('');
+            
+            document.getElementById('history').innerHTML = `
+                <div class="history">
+                    <div class="history-title">开奖记录</div>
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>期号</th>
+                                <th>时间</th>
+                                <th>号码</th>
+                                <th>总和</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${historyRows}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function copyText(text) {
+            navigator.clipboard.writeText(text);
+            alert('已复制');
+        }
+
+        getData();
+    </script>
+</body>
+</html>
