@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>空白会员代开</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+
+        /* 浅色模式（淡紫渐变背景） */
+        :root {
+            --bg-body: linear-gradient(135deg, #f9f6ff 0%, #e9e3f8 100%);
+            --bg-container: rgba(255, 255, 255, 0.85);
+            --text-primary: #2d1b69;
+            --text-secondary: #6b5ca5;
+            --text-tertiary: #4a3a8f;
+            --border-color: #e9e3f8;
+            --shadow-color: rgba(126, 97, 255, 0.15);
+            --card-bg: rgba(245, 240, 255, 0.9);
+            --highlight-bg: rgba(237, 231, 246, 0.9);
+            --highlight-text: #7e61ff;
+            --float-btn-bg: #7e61ff;
+            --float-btn-text: #ffffff;
+            --float-btn-hover: #6b4fdb;
+        }
+
+        /* 深色模式（深紫渐变背景） */
+        [data-theme="dark"] {
+            --bg-body: linear-gradient(135deg, #120b24 0%, #1e1336 100%);
+            --bg-container: rgba(30, 19, 54, 0.85);
+            --text-primary: #f0e6ff;
+            --text-secondary: #c2b2e9;
+            --text-tertiary: #d9cfff;
+            --border-color: #35265e;
+            --shadow-color: rgba(0, 0, 0, 0.3);
+            --card-bg: rgba(37, 25, 66, 0.9);
+            --highlight-bg: rgba(45, 32, 82, 0.9);
+            --highlight-text: #9d85ff;
+            --float-btn-bg: #9d85ff;
+            --float-btn-text: #ffffff;
+            --float-btn-hover: #8a6efd;
+        }
+
+        /* 旋转动画 */
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .rotate-icon {
+            animation: rotate 8s linear infinite;
+        }
+
+        body {
+            font-family: "Microsoft Yahei", sans-serif;
+            background: var(--bg-body);
+            background-attachment: fixed;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 30px 0;
+            position: relative;
+        }
+
+        .container {
+            background-color: var(--bg-container);
+            padding: 40px 60px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px var(--shadow-color);
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+            position: relative;
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        /* 模式切换按钮 */
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .theme-toggle img {
+            width: 20px;
+            height: 20px;
+        }
+
+        .title {
+            font-size: 32px;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .tag {
+            font-size: 18px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .tag img {
+            width: 24px;
+            height: 24px;
+        }
+
+        /* 板块样式 */
+        .section {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: left;
+            border: 1px solid var(--border-color);
+        }
+
+        .section-title {
+            font-size: 18px;
+            color: var(--text-primary);
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: 600;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--highlight-text);
+        }
+
+        .price-list, .benefit-list {
+            list-style: none;
+        }
+
+        .price-item, .benefit-item {
+            font-size: 15px;
+            color: var(--text-tertiary);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .price-item::before {
+            content: "⭐";
+            font-size: 12px;
+            color: var(--highlight-text);
+        }
+
+        .benefit-item::before {
+            content: "✓";
+            font-size: 12px;
+            color: var(--highlight-text);
+        }
+
+        /* 联系客服提示 */
+        .contact-box {
+            background-color: var(--highlight-bg);
+            color: var(--highlight-text);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 15px;
+            margin-bottom: 0;
+            margin-top: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        /* 支付方式 & 客服时间 */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .info-box {
+            background-color: var(--highlight-bg);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .info-box-title {
+            font-size: 16px;
+            color: var(--highlight-text);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .info-item {
+            font-size: 14px;
+            color: var(--text-tertiary);
+            margin-bottom: 5px;
+        }
+
+        .divider {
+            height: 1px;
+            background-color: var(--border-color);
+            margin: 15px 0;
+        }
+
+        /* 悬浮按钮 */
+        .float-contact-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background-color: var(--float-btn-bg);
+            color: var(--float-btn-text);
+            padding: 12px 20px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-size: 16px;
+            box-shadow: 0 4px 12px rgba(126, 97, 255, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 999;
+            border: none;
+            transition: background-color 0.3s;
+        }
+
+        .float-contact-btn:hover {
+            background-color: var(--float-btn-hover);
+        }
+
+        .float-contact-btn img {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 480px) {
+            .container {
+                padding: 25px 20px;
+            }
+
+            .title {
+                font-size: 26px;
+            }
+
+            .tag {
+                font-size: 16px;
+            }
+
+            .section {
+                padding: 15px;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .float-contact-btn {
+                padding: 10px 16px;
+                font-size: 14px;
+                bottom: 20px;
+                right: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 模式切换按钮 -->
+        <button class="theme-toggle" id="themeToggle">
+            <img src="https://img.icons8.com/fluency/96/000000/moon.png" alt="切换深色模式" id="themeIcon">
+        </button>
+
+        <h1 class="title">空白会员代开</h1>
+        <div class="tag">
+            @kiwfu
+            <img src="https://img.icons8.com/fluency/96/000000/telegram-app.png" alt="Telegram图标" class="rotate-icon">
+        </div>
+
+        <!-- 星星代购板块 -->
+        <div class="section">
+            <h3 class="section-title">星星代购价格预览表</h3>
+            <ul class="price-list">
+                <li class="price-item">50 星星 = 1.8U</li>
+                <li class="price-item">100 星星 = 2.5U</li>
+                <li class="price-item">200 星星 = 5.2U</li>
+                <li class="price-item">500 星星 = 12.8U</li>
+                <li class="price-item">1000 星星 = 27.5U</li>
+            </ul>
+            <div class="contact-box">👨‍💻 联系客服: @kbail1_bot</div>
+        </div>
+
+        <!-- TG会员代开板块 -->
+        <div class="section">
+            <h3 class="section-title">Telegram会员价格预览表</h3>
+            <ul class="price-list">
+                <li class="price-item">三个月会员 = 12.5U</li>
+                <li class="price-item">六个月会员 = 20.5U</li>
+                <li class="price-item">一年会员 = 35.5U</li>
+            </ul>
+            <div class="contact-box">👨‍💻 联系客服: @kbail1_bot</div>
+        </div>
+
+        <!-- 老TG号板块 -->
+        <div class="section">
+            <h3 class="section-title">高质量飞机号好处</h3>
+            <ul class="benefit-list">
+                <li class="benefit-item">暴力群发 暴击私信 创建群组</li>
+                <li class="benefit-item">强拉 挂群管等 用作主号能比888质量都硬</li>
+                <li class="benefit-item">可用于任何用途</li>
+            </ul>
+            <div class="divider"></div>
+            <h3 class="section-title">老飞机号价格预览</h3>
+            <ul class="price-list">
+                <li class="price-item">1年老号 = 3U</li>
+                <li class="price-item">2年老号 = 5.5U</li>
+                <li class="price-item">3年老号 = 6.5U</li>
+                <li class="price-item">4年老号 = 7.5U</li>
+                <li class="price-item">5年老号 = 8.5U</li>
+                <li class="price-item">6年老号 = 9.5U</li>
+                <li class="price-item">7年老号 = 12.5U</li>
+                <li class="price-item">8年老号 = 15.5U</li>
+                <li class="price-item">9年老号 = 25.5U</li>
+                <li class="price-item">10年老号 = 40U</li>
+            </ul>
+            <div class="contact-box">👨‍💻 联系客服: @kbail1_bot</div>
+        </div>
+
+        <!-- 定制服务板块 -->
+        <div class="section">
+            <h3 class="section-title">定制服务</h3>
+            <ul class="price-list">
+                <li class="price-item">定制图标 = 5U</li>
+                <li class="price-item">实名微信一条龙 = 50U</li>
+                <li class="price-item">帮代买礼物用户名</li>
+            </ul>
+        </div>
+
+        <!-- 支付方式 & 客服时间 -->
+        <div class="section">
+            <div class="info-grid">
+                <div class="info-box">
+                    <div class="info-box-title">支持支付方式</div>
+                    <ul class="info-list">
+                        <li class="info-item">okpay</li>
+                        <li class="info-item">kkpay</li>
+                        <li class="info-item">支付宝</li>
+                        <li class="info-item">USDT支付</li>
+                    </ul>
+                </div>
+                <div class="info-box">
+                    <div class="info-box-title">客服营业时间</div>
+                    <ul class="info-list">
+                        <li class="info-item">周一到周五</li>
+                        <li class="info-item">中午12点到晚上一点钟</li>
+                        <li class="info-item">周末 全天在线</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 悬浮客服按钮 -->
+    <a href="https://t.me/kiwfu" class="float-contact-btn" target="_blank">
+        <img src="https://img.icons8.com/fluency/96/ffffff/telegram-app.png" alt="Telegram图标" class="rotate-icon">
+        联系客服
+    </a>
+
+    <script>
+        // 获取元素
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const html = document.documentElement;
+
+        // 从本地存储读取主题偏好
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        html.setAttribute('data-theme', savedTheme);
+        updateIcon(savedTheme);
+
+        // 切换主题函数
+        function toggleTheme() {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateIcon(newTheme);
+        }
+
+        // 更新切换按钮图标
+        function updateIcon(theme) {
+            if (theme === 'dark') {
+                themeIcon.src = 'https://img.icons8.com/fluency/96/ffffff/sun.png';
+                themeIcon.alt = '切换浅色模式';
+            } else {
+                themeIcon.src = 'https://img.icons8.com/fluency/96/000000/moon.png';
+                themeIcon.alt = '切换深色模式';
+            }
+        }
+
+        // 绑定点击事件
+        themeToggle.addEventListener('click', toggleTheme);
+    </script>
+</body>
+</html>
